@@ -183,4 +183,14 @@ pyinstaller --onefile --windowed --name "RCBridge" rc_bridge_gui.py
 
 ## 📄 License
 
-MIT
+**本项目代码** © 2026 李阳，基于 MIT License 开源 —— 详见 [LICENSE](./LICENSE)。
+
+**第三方组件：**
+| 组件 | License |
+|------|---------|
+| RCSDK v1.9.1 (android-app/libs/) | ⚠️ **Skydroid 专有许可** — 闭源二进制，仅限搭配云卓遥控器使用 |
+| ViGEmBus (驱动) | BSD 3-Clause |
+| vgamepad (Python 库) | MIT |
+| vJoy (驱动) | BSD 3-Clause |
+
+详见 [NOTICE](./NOTICE)。

@@ -1,0 +1,49 @@
+NOTICE
+======
+
+This project incorporates third-party components with separate copyright
+and licensing terms, as described below.
+
+---
+
+Skydroid RCSDK v1.9.1
+---------------------
+- File: android-app/app/libs/rcsdk-v1.9.1.aar
+- Copyright: Skydroid Technology Co., Ltd.
+- License: Proprietary — All Rights Reserved
+
+This is a binary SDK distributed by Skydroid for use with their remote
+controllers (H12 Pro, H16, H20, etc.). The source code is not publicly
+available. Use of this SDK is subject to Skydroid's terms and conditions.
+
+This project is NOT affiliated with or endorsed by Skydroid Technology Co., Ltd.
+
+---
+
+ViGEmBus
+--------
+- Copyright (c) Nefarius Software Solutions e.U.
+- License: BSD 3-Clause
+- https://github.com/nefarius/ViGEmBus
+
+Used by the ViGEmBus PC receiver (pc-receiver-vigem/) via vgamepad.
+
+---
+
+vgamepad
+--------
+- Copyright (c) 2021 David R. Andersen
+- License: MIT
+- https://github.com/nefarius/vgamepad
+
+Python library for virtual gamepad control.
+
+---
+
+vJoy
+----
+- Copyright (c) Shaul Eizikovich
+- License: BSD 3-Clause
+- https://sourceforge.net/projects/vjoystick/
+
+Used by the vJoy PC receiver (pc-receiver/) as an alternative virtual driver.
