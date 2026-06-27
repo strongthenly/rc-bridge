@@ -23,13 +23,15 @@ import org.json.JSONObject;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
  * H12 Pro 通道是 GET 方式，需要轮询
- * 轮询和广播统一为 50ms (20Hz)，避免发送重复帧
+ * 数据驱动广播：每次 poll 拿到新数据立即发送，不另开定时线程
+ * 延迟 = poll 间隔（50ms），无额外 broadcast sleep
  */
 public class RCBroadcastService extends Service {
 
@@ -37,16 +39,21 @@ public class RCBroadcastService extends Service {
     private static final int UDP_PORT = 10001;
     private static final String BROADCAST_IP = "255.255.255.255";
     private static final long POLL_INTERVAL_MS = 50L; // 20Hz
-    private static final long BROADCAST_INTERVAL_MS = 50L; // 20Hz，与轮询同步
+
     private static final String CHANNEL_ID = "rc_bridge_channel";
     private static final int NOTIF_ID = 1001;
 
     private boolean isRunning = false;
     private DatagramSocket sendSocket = null;
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private int[] latestChannels = new int[12]; // H12 Pro 只有 12 通道
+    private int[] latestChannels = new int[12];
     private final Object channelLock = new Object();
     private final CountDownLatch dataReady = new CountDownLatch(1);
+    private final ExecutorService udpSender = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "udp-sender");
+        t.setDaemon(true);
+        return t;
+    });
 
     private final Runnable pollRunnable = new Runnable() {
         @Override
@@ -119,7 +126,6 @@ public class RCBroadcastService extends Service {
     }
 
     private void pollChannels() {
-        // H12 Pro 是 GET 方式，每次主动请求通道值
         KeyManager.INSTANCE.get(RemoteControllerKey.INSTANCE.getKeyChannels(),
             new CompletionCallbackWith<int[]>() {
                 @Override
@@ -128,7 +134,10 @@ public class RCBroadcastService extends Service {
                         synchronized (channelLock) {
                             latestChannels = values;
                         }
-                        dataReady.countDown(); // 首次数据到达后唤醒广播线程
+                        // 首次数据到达后标记就绪
+                        dataReady.countDown();
+                        // 数据驱动：拿到新数据立即发送，不另开定时广播线程
+                        udpSender.submit(RCBroadcastService.this::sendCurrentChannels);
                     }
                 }
 
@@ -139,55 +148,41 @@ public class RCBroadcastService extends Service {
             });
     }
 
+    /**
+     * 读取 latestChannels 构造 JSON 并 UDP 广播
+     * 在 udpSender 线程池中执行，不阻塞回调线程
+     */
+    private void sendCurrentChannels() {
+        if (sendSocket == null || sendSocket.isClosed()) return;
+        try {
+            JSONObject json = new JSONObject();
+            synchronized (channelLock) {
+                int len = Math.min(latestChannels.length, 12);
+                for (int i = 0; i < len; i++) {
+                    json.put("ch" + (i + 1), latestChannels[i]);
+                }
+            }
+            json.put("ts", System.currentTimeMillis());
+
+            byte[] data = json.toString().getBytes("UTF-8");
+            InetAddress addr = InetAddress.getByName(BROADCAST_IP);
+            DatagramPacket packet = new DatagramPacket(data, data.length, addr, UDP_PORT);
+            sendSocket.send(packet);
+        } catch (Exception e) {
+            if (isRunning) Log.e(TAG, "UDP send error", e);
+        }
+    }
+
     private void startUDPBroadcast() {
         try {
             sendSocket = new DatagramSocket();
             sendSocket.setBroadcast(true);
-
-            final DatagramSocket sock = sendSocket;
-            Thread broadcastThread = new Thread(() -> {
-                // 用 CountDownLatch 替代 busy-wait，等待首次通道数据
-                try {
-                    if (!dataReady.await(5, TimeUnit.SECONDS)) {
-                        Log.w(TAG, "Timeout waiting for first channel data");
-                        if (isRunning) stopSelf();
-                        return;
-                    }
-                } catch (InterruptedException e) {
-                    return;
-                }
-
-                while (isRunning && sock != null && !Thread.interrupted()) {
-                    try {
-                        JSONObject json = new JSONObject();
-                        synchronized (channelLock) {
-                            int len = Math.min(latestChannels.length, 12);
-                            for (int i = 0; i < len; i++) {
-                                json.put("ch" + (i + 1), latestChannels[i]);
-                            }
-                        }
-                        json.put("ts", System.currentTimeMillis());
-
-                        byte[] data = json.toString().getBytes("UTF-8");
-                        InetAddress addr = InetAddress.getByName(BROADCAST_IP);
-                        DatagramPacket packet = new DatagramPacket(data, data.length, addr, UDP_PORT);
-                        sock.send(packet);
-                        Thread.sleep(BROADCAST_INTERVAL_MS); // 20Hz，与轮询同步
-                    } catch (InterruptedException e) {
-                        break;
-                    } catch (Exception e) {
-                        if (isRunning) Log.e(TAG, "UDP error", e);
-                    }
-                }
-            });
-            broadcastThread.setDaemon(true);
-            broadcastThread.start();
-            Log.d(TAG, "UDP broadcast started");
+            Log.d(TAG, "UDP broadcast ready");
 
             NotificationManager nm = getSystemService(NotificationManager.class);
             if (nm != null) nm.notify(NOTIF_ID, buildNotification("广播中 - " + UDP_PORT));
         } catch (Exception e) {
-            Log.e(TAG, "Failed UDP", e);
+            Log.e(TAG, "Failed UDP init", e);
             stopSelf();
         }
     }
@@ -195,6 +190,7 @@ public class RCBroadcastService extends Service {
     private void stopAll() {
         isRunning = false;
         handler.removeCallbacks(pollRunnable);
+        udpSender.shutdownNow();
         if (sendSocket != null) {
             sendSocket.close();
             sendSocket = null;

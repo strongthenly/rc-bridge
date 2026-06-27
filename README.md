@@ -191,7 +191,7 @@ pyinstaller --onefile --windowed --name "RCBridge" rc_bridge_gui.py
 
 - **RCSDK v1.9.1** — 云卓官方 SDK，串口读取摇杆
 - **H12 Pro** — GET 模式，每 50ms 请求一次通道值
-- **UDP 端口 10001** — 20Hz JSON 广播（与轮询同步）
+- **UDP 端口 10001** — 数据驱动广播，poll 回调拿到数据即发，无额外延迟
 - **死区 DEADZONE=20** — 摇杆回中偏 20 以内视为中位，防漂移
 - **ViGEmBus** — 模拟 Xbox 360 手柄，CH7~CH10 映射 A/B/X/Y 按键
 
