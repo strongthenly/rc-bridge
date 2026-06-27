@@ -9,6 +9,9 @@ import vgamepad as vg
 # 配置
 # ============================================================
 UDP_PORT = 10001
+# 死区：摇杆在 1500±DEADZONE 范围内视为中位
+# 大多数遥控器物理回中偏差在 ±10~±30 之间
+DEADZONE = 20  # 如果偏多可以加大，建议 15~40
 # Xbox 手柄轴映射 (通道 → 手柄轴)
 # 标准穿越机映射:
 #   CH1 Roll  → 右摇杆 X
@@ -37,7 +40,10 @@ class VigemBridge:
         self.udp_rx = 0
 
     def pwm_to_axis(self, pwm_val: float) -> int:
-        """PWM 1050~1950 → Xbox 轴值 0~32767 (中心 16384)"""
+        """PWM 1050~1950 → Xbox 轴值 0~32767 (中心 16384)，含死区"""
+        # 死区处理：在 1500±DEADZONE 内强行输出中心
+        if abs(pwm_val - 1500) <= DEADZONE:
+            return 16384
         pct = max(0.0, min(1.0, (pwm_val - 1050.0) / 900.0))
         return int(pct * 32767)
 
@@ -111,11 +117,15 @@ class VigemBridge:
             # 打印状态 (每秒1次)
             now = time.time()
             if now - last_print >= 1.0:
-                vals = []
-                for ch in [1, 2, 3, 4]:
-                    pct = (channels.get(ch, 1500) - 1050) / 9
-                    vals.append(f"CH{ch}={pct:.0f}%")
-                print(f"\r{self.udp_rx:5d}帧/s | {'  '.join(vals)}", end="", flush=True)
+                raw_vals = '  '.join(
+                    f"CH{ch}={channels.get(ch, 1500):.0f}"
+                    for ch in [1, 2, 3, 4]
+                )
+                deadzone_active = '  '.join(
+                    f"CH{ch}✓" if abs(channels.get(ch, 1500) - 1500) <= DEADZONE else f"CH{ch}✗"
+                    for ch in [1, 2, 3, 4]
+                )
+                print(f"\r{self.udp_rx:5d}帧/s | {raw_vals} | 死区{deadzone_active}", end="", flush=True)
                 self.udp_rx = 0
                 last_print = now
 
