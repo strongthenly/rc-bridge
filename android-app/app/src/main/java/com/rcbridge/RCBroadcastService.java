@@ -24,9 +24,12 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * H12 Pro 通道是 GET 方式，需要轮询
+ * 轮询和广播统一为 50ms (20Hz)，避免发送重复帧
  */
 public class RCBroadcastService extends Service {
 
@@ -34,6 +37,7 @@ public class RCBroadcastService extends Service {
     private static final int UDP_PORT = 10001;
     private static final String BROADCAST_IP = "255.255.255.255";
     private static final long POLL_INTERVAL_MS = 50L; // 20Hz
+    private static final long BROADCAST_INTERVAL_MS = 50L; // 20Hz，与轮询同步
     private static final String CHANNEL_ID = "rc_bridge_channel";
     private static final int NOTIF_ID = 1001;
 
@@ -41,8 +45,8 @@ public class RCBroadcastService extends Service {
     private DatagramSocket sendSocket = null;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private int[] latestChannels = new int[12]; // H12 Pro 只有 12 通道
-    private boolean hasData = false;
     private final Object channelLock = new Object();
+    private final CountDownLatch dataReady = new CountDownLatch(1);
 
     private final Runnable pollRunnable = new Runnable() {
         @Override
@@ -123,8 +127,8 @@ public class RCBroadcastService extends Service {
                     if (values != null) {
                         synchronized (channelLock) {
                             latestChannels = values;
-                            hasData = true;
                         }
+                        dataReady.countDown(); // 首次数据到达后唤醒广播线程
                     }
                 }
 
@@ -142,11 +146,17 @@ public class RCBroadcastService extends Service {
 
             final DatagramSocket sock = sendSocket;
             Thread broadcastThread = new Thread(() -> {
-                // 等拿到第一次通道数据再开始广播
-                while (isRunning) {
-                    synchronized (channelLock) { if (hasData) break; }
-                    try { Thread.sleep(10); } catch (InterruptedException e) { return; }
+                // 用 CountDownLatch 替代 busy-wait，等待首次通道数据
+                try {
+                    if (!dataReady.await(5, TimeUnit.SECONDS)) {
+                        Log.w(TAG, "Timeout waiting for first channel data");
+                        if (isRunning) stopSelf();
+                        return;
+                    }
+                } catch (InterruptedException e) {
+                    return;
                 }
+
                 while (isRunning && sock != null && !Thread.interrupted()) {
                     try {
                         JSONObject json = new JSONObject();
@@ -162,7 +172,7 @@ public class RCBroadcastService extends Service {
                         InetAddress addr = InetAddress.getByName(BROADCAST_IP);
                         DatagramPacket packet = new DatagramPacket(data, data.length, addr, UDP_PORT);
                         sock.send(packet);
-                        Thread.sleep(20); // 50Hz 广播
+                        Thread.sleep(BROADCAST_INTERVAL_MS); // 20Hz，与轮询同步
                     } catch (InterruptedException e) {
                         break;
                     } catch (Exception e) {

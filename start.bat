@@ -32,7 +32,7 @@ if %errorlevel% neq 0 (
 echo [OK] 启动桥接程序...
 echo.
 :: 优先尝试同目录下的 exe，没有则回退到 Python 脚本
-set EXE_PATH=%~dp0dist\rc-bridge-vigem.exe
+set EXE_PATH=%~dp0dist\rc-bridge-v0.1-vigem.exe
 set SCRIPT_PATH=%~dp0pc-receiver-vigem\rc_bridge_vigem.py
 
 if exist "%EXE_PATH%" (
