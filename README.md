@@ -1,6 +1,17 @@
-# RC Bridge — H12 Pro 遥控器 → PC 摇杆桥接
+# RC Bridge — RC Remote → PC Joystick Bridge
 
-将 Skydroid H12 Pro 遥控器的摇杆数据通过 WiFi/UDP 桥接到 PC，映射为虚拟摇杆，用于飞行模拟器（VelociDrone、Liftoff、DRL Simulator 等）。
+将遥控器的摇杆数据通过 WiFi/UDP 桥接到 PC，映射为虚拟摇杆，用于飞行模拟器（VelociDrone、Liftoff、DRL Simulator 等）。
+
+## 兼容性说明
+
+本项目分两部分，兼容性不同：
+
+| 组件 | 兼容情况 | 说明 |
+|------|---------|------|
+| **PC 接收端** （`pc-receiver/` + `pc-receiver-vigem/`） | ✅ **完全通用** | 不挑遥控器，任何设备只要往 UDP 10001 发标准 JSON 都能驱动 |
+| **Android APP** （`android-app/`） | ⚠️ **仅限 Skydroid 遥控器** | 使用云卓官方 RCSDK，适合 H12 Pro / H16 / H20 等型号 |
+
+**PC 接收端是通用模块**，不管用什么遥控器（FrSky、RadioMaster、甚至手机发 UDP 模拟数据），只要数据格式对得上就能用。换遥控器只需要改发送端，PC 端一根不用动。
 
 ## 原理
 
@@ -60,7 +71,15 @@ cd pc-receiver-vigem
 python rc_bridge_vigem.py
 ```
 
-**遥控器端：** 编译并安装 android-app 到 H12 Pro，打开 APP → 点 **启动广播服务**。
+**遥控器端（仅限 Skydroid 遥控器）：** 编译并安装 android-app 到 H12 Pro（或其他云卓遥控器），打开 APP → 点 **启动广播服务**。
+
+其他品牌遥控器需要自行实现发送端，往 UDP 10001 发送 JSON：
+
+```json
+{"ch1":1500,"ch2":1500,"ch3":1500,"ch4":1500,"ch5":1050,"ch6":1500,"ch7":1950,"ch8":1050,"ch9":1050,"ch10":1950,"ts":1700000000000}
+```
+
+字段说明：`ch1`~`ch12` 为各通道值（范围 1050~1950），`ts` 为毫秒时间戳。PC 端只认这个格式，不管是谁发的。
 
 ### vJoy 版
 
