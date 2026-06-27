@@ -6,12 +6,12 @@
 
 | 组件 | 文件 | 说明 |
 |------|------|------|
-| **Android APP** | [`dist/rc-bridge-android.apk`](./dist/rc-bridge-android.apk) | 安装到 H12 Pro 遥控器，启动 UDP 广播服务 |
-| **PC 接收端 (ViGEmBus 版)** ⭐ | [`dist/rc-bridge-vigem.exe`](./dist/rc-bridge-vigem.exe) | 双击运行，自动虚拟 Xbox 手柄，推荐使用 |
+| **Android APP** | [`dist/rc-bridge-v0.1-android.apk`](./dist/rc-bridge-v0.1-android.apk) | 安装到 H12 Pro 遥控器，启动 UDP 广播服务 |
+| **PC 接收端 (ViGEmBus 版)** ⭐ | [`dist/rc-bridge-v0.1-vigem.exe`](./dist/rc-bridge-v0.1-vigem.exe) | 双击运行，自动虚拟 Xbox 手柄，推荐使用 |
 
 **使用方式：**
-1. PC 上安装 [ViGEmBus 驱动](https://github.com/nefarius/ViGEmBus/releases)（仅首次），然后双击 `dist/rc-bridge-vigem.exe`
-2. H12 Pro 上安装 `rc-bridge-android.apk`，打开 APP → 点 **启动广播服务**
+1. PC 上安装 [ViGEmBus 驱动](https://github.com/nefarius/ViGEmBus/releases)（仅首次），然后双击 `dist/rc-bridge-v0.1-vigem.exe`
+2. H12 Pro 上安装 `rc-bridge-v0.1-android.apk`，打开 APP → 点 **启动广播服务**
 3. 打开模拟器即可飞行，无需任何配置
 
 如果不想下载单个文件，也可以直接用根目录的 [`start.bat`](./start.bat) —— 自动检测 ViGEmBus 驱动并启动桥接。
@@ -75,7 +75,7 @@ H12 Pro 遥控器
 
 **选项 A：双击预编译 exe（推荐）**
 ```bash
-dist/rc-bridge-vigem.exe
+dist/rc-bridge-v0.1-vigem.exe
 ```
 
 **选项 B：Python 运行**
@@ -92,7 +92,7 @@ cd pc-receiver-vigem
 python rc_bridge_vigem.py
 ```
 
-**遥控器端（仅限 Skydroid 遥控器）：** 安装 `dist/rc-bridge-android.apk` 到 H12 Pro（或其他云卓遥控器），打开 APP → 点 **启动广播服务**。
+**遥控器端（仅限 Skydroid 遥控器）：** 安装 `dist/rc-bridge-v0.1-android.apk` 到 H12 Pro（或其他云卓遥控器），打开 APP → 点 **启动广播服务**。
 
 其他品牌遥控器需要自行实现发送端，往 UDP 10001 发送 JSON：
 
@@ -140,8 +140,8 @@ rc-bridge/
 │   ├── rc_bridge_vigem.py          # 虚拟 Xbox 360 手柄（含死区）
 │   └── requirements.txt            # vgamepad 依赖
 ├── dist/                           # 预构建下载
-│   ├── rc-bridge-android.apk       # Android APP (已编译)
-│   └── rc-bridge-vigem.exe         # ViGEmBus 版 exe
+│   ├── rc-bridge-v0.1-android.apk       # Android APP (已编译)
+│   └── rc-bridge-v0.1-vigem.exe         # ViGEmBus 版 exe
 ├── start.bat                       # 一键启动脚本 (检测驱动 + 启动桥接)
 ├── README.md
 └── .gitignore
