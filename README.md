@@ -1,193 +1,186 @@
-# RC Bridge — RC Remote → PC Joystick Bridge
+# RC Bridge 遥控器桥接
 
-将遥控器的摇杆数据通过 WiFi/UDP 桥接到 PC，映射为虚拟摇杆，用于飞行模拟器（VelociDrone、Liftoff、DRL Simulator 等）。
+[![version](https://img.shields.io/badge/version-v0.1-blue)]()
+[![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Android-blue)]()
+[![license](https://img.shields.io/badge/license-MIT-green)]()
 
-## 预构建下载
+> 用 Skydroid H12 Pro 遥控器飞 PC 模拟器。摇杆 → WiFi → 虚拟 Xbox 手柄，即开即飞。
 
-| 组件 | 文件 | 说明 |
+---
+
+## ⬇️ 下载
+
+<div align="center">
+
+| 文件 | 大小 | 用途 |
 |------|------|------|
-| **Android APP** | [`dist/rc-bridge-v0.1-android.apk`](./dist/rc-bridge-v0.1-android.apk) | 安装到 H12 Pro 遥控器，启动 UDP 广播服务 |
-| **PC 接收端 (ViGEmBus 版)** ⭐ | [`dist/rc-bridge-v0.1-vigem.exe`](./dist/rc-bridge-v0.1-vigem.exe) | 双击运行，自动虚拟 Xbox 手柄，推荐使用 |
+| 📱 [rc-bridge-v0.1-android.apk](./dist/rc-bridge-v0.1-android.apk) | 8.4 MB | **装到遥控器上**，安装后点"启动广播" |
+| 🎮 [rc-bridge-v0.1-vigem.exe](./dist/rc-bridge-v0.1-vigem.exe) | 9.3 MB | **在 PC 上双击**，自动变虚拟手柄 |
+| 🚀 [start.bat](./start.bat) | — | 一键启动（检测驱动 + 启动桥接） |
 
-**使用方式：**
-1. PC 上安装 [ViGEmBus 驱动](https://github.com/nefarius/ViGEmBus/releases)（仅首次），然后双击 `dist/rc-bridge-v0.1-vigem.exe`
-2. H12 Pro 上安装 `rc-bridge-v0.1-android.apk`，打开 APP → 点 **启动广播服务**
-3. 打开模拟器即可飞行，无需任何配置
+</div>
 
-如果不想下载单个文件，也可以直接用根目录的 [`start.bat`](./start.bat) —— 自动检测 ViGEmBus 驱动并启动桥接。
+---
 
-## 兼容性说明
+## 🚀 三步上手
 
-本项目分两部分，兼容性不同：
+| # | 步骤 | 需要时间 |
+|---|------|---------|
+| **1** | PC 装 [ViGEmBus 驱动](https://github.com/nefarius/ViGEmBus/releases)（首次，只需一次） | 1 分钟 |
+| **2** | 双击 `rc-bridge-v0.1-vigem.exe`，遥控器上打开 APP 点 **「启动广播」** | 10 秒 |
+| **3** | 打开飞行模拟器，开飞 ✈️ | — |
 
-| 组件 | 兼容情况 | 说明 |
-|------|---------|------|
-| **PC 接收端** （`pc-receiver/` + `pc-receiver-vigem/`） | ✅ **完全通用** | 不挑遥控器，任何设备只要往 UDP 10001 发标准 JSON 都能驱动 |
-| **Android APP** （`android-app/`） | ⚠️ **仅限 Skydroid 遥控器** | 使用云卓官方 RCSDK，适合 H12 Pro / H16 / H20 等型号 |
+> 💡 以后每次飞只需要 **第 2 步**，驱动装一次就行。
 
-**PC 接收端是通用模块**，不管用什么遥控器（FrSky、RadioMaster、甚至手机发 UDP 模拟数据），只要数据格式对得上就能用。换遥控器只需要改发送端，PC 端一根不用动。
+---
 
-## 原理
+## 🧩 兼容性
+
+| 组件 | 兼容情况 |
+|------|---------|
+| PC 接收端 | ✅ **完全不挑遥控器**，任何设备，UDP 发 JSON 就行 |
+| Android APP（遥控器端） | ⚠️ **仅限 Skydroid 遥控器**（H12 Pro / H16 / H20 等） |
+
+PC 端是通用模块 —— 换个遥控器只需要改发送端，PC 端不动。
+
+---
+
+## 🔧 原理
 
 ```
 H12 Pro 遥控器
-  ├── RC Bridge APP (Android)
-  │     └── RCSDK 读取 12 通道摇杆值 (1050~1950)
-  │           └── UDP 广播 (端口 10001)
-  │                 ↓ WiFi
-  PC 接收端
-  ├── [vJoy 版] rc_bridge_gui.py / RCBridge.exe
-  │     └── vJoy 虚拟摇杆 → 飞行模拟器
-  └── [ViGEmBus 版] rc_bridge_vigem.py (推荐)
-        └── 虚拟 Xbox 360 手柄 → 飞行模拟器
+  └── RC Bridge APP (Android)
+        └── RCSDK 读取 12 通道 (1050~1950)
+              └── UDP 广播 (端口 10001)
+                    ↓ WiFi
+PC 接收端
+  ├── ⭐ ViGEmBus 版  →  虚拟 Xbox 360 手柄  →  模拟器
+  └── vJoy 版         →  vJoy 虚拟摇杆        →  模拟器
 ```
 
-## 两版对比
+---
 
-| | vJoy 版 | ViGEmBus 版 ⭐ |
-|--|:-------:|:-------------:|
-| 驱动 | vJoy (需手动配置轴) | ViGEmBus (即装即用) |
-| 卡死问题 | 偶尔 BUSY 卡死 | ✅ 永不卡死 |
-| 游戏识别 | 部分游戏不认 | ✅ 所有游戏认 Xbox 手柄 |
-| 轴配置 | 需手动设置 4 Axes | ✅ 即开即用 |
-| 成功率 | ~60% | **~95%** |
+## 🕹️ 通道映射 (Mode 2 美国手)
 
-**推荐使用 ViGEmBus 版**，兼容性更好，不需要任何配置。
-
-## 通道映射 (Mode 2 美国手)
-
-| 通道 | 名称 | 摇杆方向 | 范围 |
-|------|------|---------|------|
-| CH1 | 横滚 Roll | 右摇杆 ←→ | 1050~1500~1950 |
-| CH2 | 俯仰 Pitch | 右摇杆 ↑↓ | 1050~1500~1950 |
-| CH3 | 油门 Throttle | 左摇杆 ↑↓ | 1050~1500~1950 |
-| CH4 | 方向 Yaw | 左摇杆 ←→ | 1050~1500~1950 |
-| CH5 | 电位器 | 旋钮 | 1050~1500~1950 |
-| CH6 | 电位器 | 旋钮 | 1050~1500~1950 |
-| CH7~CH10 | 开关 (→ Xbox A/B/X/Y) | 两态开关 | 1050 / 1950 |
+| 通道 | 功能 | 摇杆 | 范围 |
+|------|------|------|------|
+| CH1 | 横滚 Roll | 右摇杆 ←→ | 1050 ← 1500 → 1950 |
+| CH2 | 俯仰 Pitch | 右摇杆 ↑↓ | 1050 ← 1500 → 1950 |
+| CH3 | 油门 Throttle | 左摇杆 ↑↓ | 1050 ← 1500 → 1950 |
+| CH4 | 方向 Yaw | 左摇杆 ←→ | 1050 ← 1500 → 1950 |
+| CH5~CH6 | 电位器（旋钮） | — | 1050 ← 1500 → 1950 |
+| CH7~CH10 | 开关 → Xbox A/B/X/Y | 两态 | 1050 / 1950 |
 | CH11~CH12 | 备用 | — | 1500 |
 
-## 快速开始
+---
+
+## ⚖️ 版本对比
+
+| | vJoy 版 | **ViGEmBus 版** ⭐ |
+|--|:-------:|:-----------------:|
+| 驱动 | 需手动配轴 | 即装即用 |
+| 卡死 | 偶尔 BUSY 卡死 | ✅ 永不 |
+| 游戏识别 | 部分不认 | ✅ 所有游戏 |
+| 配置 | 手动设 4 Axes | ✅ 零配置 |
+| 成功率 | ~60% | **~95%** |
+
+**推荐 ViGEmBus 版**，好用得多。
+
+---
+
+## 📋 详细安装
 
 ### ViGEmBus 版（推荐）
 
 **PC 端（二选一）：**
 
-**选项 A：双击预编译 exe（推荐）**
-```bash
-dist/rc-bridge-v0.1-vigem.exe
+**A. 双击 exe（推荐）**
+```
+dist\rc-bridge-v0.1-vigem.exe
 ```
 
-**选项 B：Python 运行**
+**B. Python 运行**
 ```bash
-# 1. 安装 ViGEmBus 驱动
-# 下载: https://github.com/nefarius/ViGEmBus/releases
-# 安装后重启电脑
-
-# 2. 安装 Python 依赖
 pip install vgamepad
-
-# 3. 运行接收端
 cd pc-receiver-vigem
 python rc_bridge_vigem.py
 ```
 
-**遥控器端（仅限 Skydroid 遥控器）：** 安装 `dist/rc-bridge-v0.1-android.apk` 到 H12 Pro（或其他云卓遥控器），打开 APP → 点 **启动广播服务**。
+**遥控器端：** 装 `dist/rc-bridge-v0.1-android.apk` → 打开 APP → **启动广播服务**
 
-其他品牌遥控器需要自行实现发送端，往 UDP 10001 发送 JSON：
-
-```json
-{"ch1":1500,"ch2":1500,"ch3":1500,"ch4":1500,"ch5":1050,"ch6":1500,"ch7":1950,"ch8":1050,"ch9":1050,"ch10":1950,"ts":1700000000000}
-```
-
-字段说明：`ch1`~`ch12` 为各通道值（范围 1050~1950），`ts` 为毫秒时间戳。PC 端只认这个格式，不管是谁发的。
+> 其他遥控器：往 UDP 10001 发 JSON 就行
+> ```json
+> {"ch1":1500,"ch2":1500,"ch3":1500,"ch4":1500,"ch5":1050,"ch6":1500,"ch7":1950,"ch8":1050,"ch9":1050,"ch10":1950,"ts":1700000000000}
+> ```
+> `ch1~ch12` 范围 1050~1950，`ts` 是毫秒时间戳。
 
 ### vJoy 版
 
-**PC 端：**
 ```bash
-# 1. 安装 vJoy 驱动
-# 下载: https://sourceforge.net/projects/vjoystick/
-# 安装后打开 Configure vJoy:
-#   - Number of Axes → 4 → 勾选 X Y Z Rx → Apply
+# 1. 装 vJoy 驱动
+#    https://sourceforge.net/projects/vjoystick/
+#    装完打开 Configure vJoy → Number of Axes=4 → 勾 X Y Z Rx → Apply
 
-# 2. 运行接收端（二选一）
-# 选项 A: Python 脚本
+# 2. 运行
 pip install pyvjoy
 python pc-receiver/rc_bridge_gui.py
-
-# 选项 B: 打包好的 EXE
-pc-receiver/dist/RCBridge.exe
 ```
 
-## 项目结构
+---
+
+## 📁 项目结构
 
 ```
 rc-bridge/
-├── android-app/                    # Android APP 源码 (Gradle)
-│   ├── app/
-│   │   ├── src/main/java/          # Java 源码
-│   │   ├── libs/                   # RCSDK AAR
-│   │   └── build.gradle
-│   └── build.gradle
-├── pc-receiver/                    # PC 接收端 - vJoy 版
-│   ├── rc_bridge_gui.py            # GUI 版 (tkinter)
-│   ├── rc_receiver.py              # 核心接收逻辑
-│   ├── requirements.txt            # Python 依赖
-│   └── dist/
-│       └── RCBridge.exe            # 打包好的可执行文件
-├── pc-receiver-vigem/              # PC 接收端 - ViGEmBus 版 ⭐
-│   ├── rc_bridge_vigem.py          # 虚拟 Xbox 360 手柄（含死区）
-│   └── requirements.txt            # vgamepad 依赖
-├── dist/                           # 预构建下载
-│   ├── rc-bridge-v0.1-android.apk       # Android APP (已编译)
-│   └── rc-bridge-v0.1-vigem.exe         # ViGEmBus 版 exe
-├── start.bat                       # 一键启动脚本 (检测驱动 + 启动桥接)
+├── android-app/                   # 遥控器 APP 源码
+├── pc-receiver/                   # PC 接收端 - vJoy 版
+├── pc-receiver-vigem/             # PC 接收端 - ViGEmBus 版 ⭐
+├── dist/                          # 预编译下载
+│   ├── rc-bridge-v0.1-android.apk
+│   └── rc-bridge-v0.1-vigem.exe
+├── start.bat                      # 一键启动
 ├── README.md
 └── .gitignore
 ```
 
-## 技术细节
+---
 
-- **RCSDK v1.9.1** — 云卓官方 SDK，通过串口读取遥控器摇杆值
-- **H12 Pro 通道读取** — GET 方式，每 50ms 主动请求一次通道值
-- **UDP 广播** — 端口 10001，50Hz 发送 JSON 格式数据
-- **vJoy** — 开源虚拟摇杆驱动，Python 通过 pyvjoy 控制
-- **ViGEmBus** — 虚拟总线驱动，通过 vgamepad 模拟 Xbox 360 手柄
-  - CH7~CH10 开关映射为 A/B/X/Y 按键
-  - CH3 油门同时映射到左扳机，便于更精细控制
-
-## 从源码构建
+## 🔨 从源码构建
 
 ### Android APP
-
 ```bash
 # 需要: Android Studio + SDK (API 36)
-# RCSDK AAR 已包含在 app/libs/ 中
-
 cd android-app
 ./gradlew assembleDebug
-# APK: app/build/outputs/apk/debug/app-debug.apk
+# APK → app/build/outputs/apk/debug/app-debug.apk
 ```
 
 ### PC EXE (ViGEmBus 版)
-
 ```bash
 pip install pyinstaller
 cd pc-receiver-vigem
 pyinstaller --onefile --name "rc-bridge-vigem" --collect-all vgamepad --console rc_bridge_vigem.py
-# EXE: dist/rc-bridge-vigem.exe
 ```
 
 ### PC EXE (vJoy 版)
-
 ```bash
 pip install pyinstaller pyvjoy
 cd pc-receiver
 pyinstaller --onefile --windowed --name "RCBridge" rc_bridge_gui.py
-# EXE: dist/RCBridge.exe
 ```
 
-## License
+---
+
+## ⚙️ 技术细节
+
+- **RCSDK v1.9.1** — 云卓官方 SDK，串口读取摇杆
+- **H12 Pro** — GET 模式，每 50ms 请求一次通道值
+- **UDP 端口 10001** — 50Hz JSON 广播
+- **死区 DEADZONE=20** — 摇杆回中偏 20 以内视为中位，防漂移
+- **ViGEmBus** — 模拟 Xbox 360 手柄，CH7~CH10 映射 A/B/X/Y 按键
+
+---
+
+## 📄 License
 
 MIT
