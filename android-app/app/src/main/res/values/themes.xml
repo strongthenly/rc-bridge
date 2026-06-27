@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.RCBridge" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#FF00D4FF</item>
+        <item name="colorPrimaryVariant">#FF00AC8C</item>
+        <item name="colorOnPrimary">#FF1A1A2E</item>
+        <item name="colorSecondary">#FF00D4FF</item>
+        <item name="android:statusBarColor">#FF1A1A2E</item>
+        <item name="android:navigationBarColor">#FF1A1A2E</item>
+    </style>
+</resources>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#FF1A1A2E">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RC Bridge"
+        android:textSize="28sp"
+        android:textColor="#FF00D4FF"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/statusText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="未连接"
+        android:textSize="16sp"
+        android:textColor="#FFAAAAAA"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/connectBtn"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="连接 RCSDK"
+        android:textSize="16sp"
+        android:backgroundTint="#FF00D4FF"
+        android:textColor="#FF1A1A2E"
+        android:layout_marginBottom="8dp" />
+
+    <Button
+        android:id="@+id/serviceBtn"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="启动广播服务"
+        android:textSize="16sp"
+        android:backgroundTint="#FF00AC8C"
+        android:textColor="#FFFFFFFF"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="摇杆通道值"
+        android:textSize="18sp"
+        android:textColor="#FF00D4FF"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/channelsText"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text="等待数据..."
+        android:textSize="14sp"
+        android:textColor="#FFCCCCCC"
+        android:fontFamily="monospace"
+        android:background="#FF16213E"
+        android:padding="12dp"
+        android:scrollbars="vertical" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="UDP 广播端口: 10001"
+        android:textSize="12sp"
+        android:textColor="#FF666666"
+        android:layout_marginTop="8dp"
+        android:gravity="center" />
+
+</LinearLayout>
