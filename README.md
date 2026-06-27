@@ -2,6 +2,20 @@
 
 将遥控器的摇杆数据通过 WiFi/UDP 桥接到 PC，映射为虚拟摇杆，用于飞行模拟器（VelociDrone、Liftoff、DRL Simulator 等）。
 
+## 预构建下载
+
+| 组件 | 文件 | 说明 |
+|------|------|------|
+| **Android APP** | [`dist/rc-bridge-android.apk`](./dist/rc-bridge-android.apk) | 安装到 H12 Pro 遥控器，启动 UDP 广播服务 |
+| **PC 接收端 (ViGEmBus 版)** ⭐ | [`dist/rc-bridge-vigem.exe`](./dist/rc-bridge-vigem.exe) | 双击运行，自动虚拟 Xbox 手柄，推荐使用 |
+
+**使用方式：**
+1. PC 上安装 [ViGEmBus 驱动](https://github.com/nefarius/ViGEmBus/releases)（仅首次），然后双击 `dist/rc-bridge-vigem.exe`
+2. H12 Pro 上安装 `rc-bridge-android.apk`，打开 APP → 点 **启动广播服务**
+3. 打开模拟器即可飞行，无需任何配置
+
+如果不想下载单个文件，也可以直接用根目录的 [`start.bat`](./start.bat) —— 自动检测 ViGEmBus 驱动并启动桥接。
+
 ## 兼容性说明
 
 本项目分两部分，兼容性不同：
@@ -57,7 +71,14 @@ H12 Pro 遥控器
 
 ### ViGEmBus 版（推荐）
 
-**PC 端：**
+**PC 端（二选一）：**
+
+**选项 A：双击预编译 exe（推荐）**
+```bash
+dist/rc-bridge-vigem.exe
+```
+
+**选项 B：Python 运行**
 ```bash
 # 1. 安装 ViGEmBus 驱动
 # 下载: https://github.com/nefarius/ViGEmBus/releases
@@ -71,7 +92,7 @@ cd pc-receiver-vigem
 python rc_bridge_vigem.py
 ```
 
-**遥控器端（仅限 Skydroid 遥控器）：** 编译并安装 android-app 到 H12 Pro（或其他云卓遥控器），打开 APP → 点 **启动广播服务**。
+**遥控器端（仅限 Skydroid 遥控器）：** 安装 `dist/rc-bridge-android.apk` 到 H12 Pro（或其他云卓遥控器），打开 APP → 点 **启动广播服务**。
 
 其他品牌遥控器需要自行实现发送端，往 UDP 10001 发送 JSON：
 
@@ -103,7 +124,7 @@ pc-receiver/dist/RCBridge.exe
 
 ```
 rc-bridge/
-├── android-app/                    # Android APP (Gradle)
+├── android-app/                    # Android APP 源码 (Gradle)
 │   ├── app/
 │   │   ├── src/main/java/          # Java 源码
 │   │   ├── libs/                   # RCSDK AAR
@@ -116,8 +137,12 @@ rc-bridge/
 │   └── dist/
 │       └── RCBridge.exe            # 打包好的可执行文件
 ├── pc-receiver-vigem/              # PC 接收端 - ViGEmBus 版 ⭐
-│   ├── rc_bridge_vigem.py          # 虚拟 Xbox 360 手柄
+│   ├── rc_bridge_vigem.py          # 虚拟 Xbox 360 手柄（含死区）
 │   └── requirements.txt            # vgamepad 依赖
+├── dist/                           # 预构建下载
+│   ├── rc-bridge-android.apk       # Android APP (已编译)
+│   └── rc-bridge-vigem.exe         # ViGEmBus 版 exe
+├── start.bat                       # 一键启动脚本 (检测驱动 + 启动桥接)
 ├── README.md
 └── .gitignore
 ```
@@ -143,6 +168,15 @@ rc-bridge/
 cd android-app
 ./gradlew assembleDebug
 # APK: app/build/outputs/apk/debug/app-debug.apk
+```
+
+### PC EXE (ViGEmBus 版)
+
+```bash
+pip install pyinstaller
+cd pc-receiver-vigem
+pyinstaller --onefile --name "rc-bridge-vigem" --collect-all vgamepad --console rc_bridge_vigem.py
+# EXE: dist/rc-bridge-vigem.exe
 ```
 
 ### PC EXE (vJoy 版)

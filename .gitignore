@@ -1,23 +1,17 @@
-# Android build
+# PyInstaller 构建产物
+pc-receiver-vigem/build/
+pc-receiver-vigem/*.spec
+pc-receiver/build/
+pc-receiver/*.spec
+pc-receiver/dist/
+pc-receiver-vigem/dist/
+
+# Android 构建产物
 android-app/.gradle/
 android-app/build/
-android-app/app/build/
 android-app/local.properties
-android-app/.idea/
-*.iml
+android-app/**/build/
 
-# Python
-pc-receiver/build/
-pc-receiver/__pycache__/
-pc-receiver/*.spec
-pc-receiver/.venv-standalone/
-
-# Temp files
-classes_tmp.jar
-classes_extracted/
-rc_key.txt
-.vbs
-
-# Windows
-Thumbs.db
-.DS_Store
+# Python 缓存
+__pycache__/
+*.pyc
